@@ -1,13 +1,13 @@
 {
   "name": "doc-api-client",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Client library for doc-api",
   "main": "dist/cjs/client.js",
   "module": "dist/esm/client.mjs",
   "types": "dist/cjs/client.d.ts",
   "scripts": {
-    "build:cjs": "tsc --project tsconfig.cjs.json",
-    "build:esm": "tsc --project tsconfig.esm.json",
+    "build:cjs": "tsc --project tsconfig/tsconfig.cjs.json",
+    "build:esm": "tsc --project tsconfig/tsconfig.esm.json",
     "build": "npm run build:cjs && npm run build:esm",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepublishOnly": "npm run build"
@@ -27,7 +27,7 @@
   },
   "files": [
     "dist/",
-    "src/"
+    "package.json"
   ],
   "exports": {
     ".": {
