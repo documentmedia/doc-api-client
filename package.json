@@ -1,0 +1,23 @@
+{
+  "name": "doc-api-client",
+  "version": "1.0.0",
+  "description": "Client library for doc-api",
+  "main": "dist/client.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/documentmedia/doc-api-client.git"
+  },
+  "author": "BEJ",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/documentmedia/doc-api-client/issues"
+  },
+  "homepage": "https://github.com/documentmedia/doc-api-client#readme",
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}
