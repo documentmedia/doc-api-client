@@ -90,7 +90,7 @@ class DocClient {
     }
 
     async request<T>(method: "GET" | "POST" | "PUT" | "DELETE", command: string, body?: any): Promise<T> {
-        const url = `${this.apiUrl}/${command}`;
+        const url = `${this.apiUrl}${command}`;
         const options: RequestInit = {
             method,
             headers: {

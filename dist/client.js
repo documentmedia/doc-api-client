@@ -82,7 +82,7 @@ class DocClient {
         }
     }
     async request(method, command, body) {
-        const url = `${this.apiUrl}/${command}`;
+        const url = `${this.apiUrl}${command}`;
         const options = {
             method,
             headers: {
