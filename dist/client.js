@@ -8,7 +8,7 @@ class DocClient {
     }
     async login(username, password, domain, fingerprint) {
         try {
-            const response = await fetch(`${this.apiUrl}/login`, {
+            const response = await fetch(`${this.apiUrl}/api/v1/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ login: username, password, domain, fingerprint }),
@@ -32,7 +32,7 @@ class DocClient {
         try {
             if (!this.refreshToken)
                 throw new Error("No refresh token available.");
-            const response = await fetch(`${this.apiUrl}/refresh`, {
+            const response = await fetch(`${this.apiUrl}/api/v1/refresh`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ refreshToken: this.refreshToken }),
