@@ -20,7 +20,7 @@
   "homepage": "https://github.com/documentmedia/doc-api-client#readme",
   "devDependencies": {
     "typescript": "^5.6.3"
-  }
+  },
   "files": [
     "dist/",
     "src/"
