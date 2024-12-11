@@ -3,6 +3,7 @@ declare class DocClient {
     private refreshToken;
     private apiUrl;
     constructor(apiUrl: string);
+    set_access_token(token: string): void;
     login(username: string, password: string, domain: string, fingerprint: string): Promise<{
         accessToken: string;
         refreshToken: string;

@@ -6,6 +6,9 @@ class DocClient {
         this.refreshToken = null;
         this.apiUrl = apiUrl;
     }
+    set_access_token(token) {
+        this.accessToken = token;
+    }
     async login(username, password, domain, fingerprint) {
         try {
             const response = await fetch(`${this.apiUrl}/api/v1/login`, {

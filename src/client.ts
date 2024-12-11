@@ -7,7 +7,7 @@ class DocClient {
         this.apiUrl = apiUrl;
     }
 
-    set_access_token(token) {
+    set_access_token(token: string) {
         this.accessToken = token;
     }
 
