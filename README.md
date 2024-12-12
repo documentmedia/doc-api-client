@@ -25,8 +25,7 @@ or
 
     const API_BASE_URL = 'https://api.example.com';
     const client = new DocClient(API_BASE_URL);
-
-    Note: URL must have no trailing slash
+    const client = new DocClient(API_BASE_URL, apikey);
 
 
 ### Public Methods
@@ -76,19 +75,14 @@ The `DocClient` class handles token-based authentication:
     (async () => {
         const client = new DocClient(API_BASE_URL);
 
-        try {
-            // Login
-            await client.login('user', 'password', 'example.com', 'unique-fingerprint');
+        const login = await client.login('user', 'password', 'example.com', 'unique-fingerprint');
+        if (!login.isSuccess()) {
+            throw Error(`Unable to log in: ${login.message} (${login.code})`);
+        }
 
-            // Fetch data
-            const categories = await client.get('/api/v1/categories');
-            console.log('Categories:', categories);
-
-            // Create a new resource
-            const newResource = await client.post('/api/v1/resource', { name: 'Sample' });
-            console.log('Created resource:', newResource);
-        } catch (error) {
-            console.error('Error:', error.message);
+        const categories = await client.get('/api/v1/categories');
+        if (categories.isSuccess()) {
+            console.log(JSON.stringify(categories.data, undefined, 2));
         }
     })();
 
