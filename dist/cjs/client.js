@@ -1,103 +1,151 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.DocApiResponse = void 0;
+;
+class DocApiResponse {
+    constructor(success, code, message, data) {
+        this.success = false;
+        this.code = 500;
+        this.message = "[No Message]";
+        this.data = null;
+        this.success = success;
+        this.code = code;
+        if (typeof message === "string") {
+            this.message = message;
+        }
+        else if (message instanceof Error) {
+            this.message = message.message ? `${message.message}` : "[No error message]";
+        }
+        else {
+            this.message = "[Unknown error type]";
+        }
+        this.data = data;
+    }
+    static ok(data, message = "Success", code = 200) {
+        if (!data) {
+            data = {};
+        }
+        return new DocApiResponse(true, code, message, data);
+    }
+    static error(message, code = 500) {
+        return new DocApiResponse(false, code, message, null);
+    }
+    isSuccess() {
+        return this.success && this.data !== null;
+    }
+}
+exports.DocApiResponse = DocApiResponse;
 class DocClient {
-    constructor(apiUrl) {
-        this.accessToken = null;
-        this.refreshToken = null;
-        this.apiUrl = apiUrl;
+    constructor(apiUrl, apiKey = null) {
+        this.apiKey = null;
+        this.aToken = null;
+        this.rToken = null;
+        this.apiUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+        this.apiKey = apiKey;
     }
-    set_access_token(token) {
-        this.accessToken = token;
+    // Overridable class methods for token storage
+    get_access_token() {
+        return this.aToken;
     }
-    async login(username, password, domain, fingerprint) {
+    set_access_token(access) {
+        this.aToken = access;
+    }
+    get_refresh_token() {
+        return this.rToken;
+    }
+    set_refresh_token(refresh) {
+        this.rToken = refresh;
+    }
+    set_apikey(apikey) {
+        this.apiKey = apikey;
+    }
+    // Not overridable
+    async login(username, password, domain = "", fingerprint = "") {
         try {
             const response = await fetch(`${this.apiUrl}/api/v1/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ login: username, password, domain, fingerprint }),
             });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`HTTP ${response.status}: ${errorData.message}`);
-            }
             const data = await response.json();
-            this.accessToken = data.data.accessToken;
-            this.refreshToken = data.data.refreshToken;
-            console.log("Login successful.");
-            return data.data;
+            if (!response.ok) {
+                return DocApiResponse.error(data.message || "Login Failed", response.status);
+            }
+            this.set_access_token(data.data.accessToken);
+            this.set_refresh_token(data.data.refreshToken);
+            return DocApiResponse.ok(data.data, data.message || 'Login Successfull', response.status);
         }
         catch (error) {
-            console.error("Login error:", error.message);
-            throw error;
+            return DocApiResponse.error(error.message || "[Internal Server Error]", 500);
         }
     }
     async refreshAccessToken() {
         try {
-            if (!this.refreshToken)
-                throw new Error("No refresh token available.");
+            if (!this.get_refresh_token()) {
+                return DocApiResponse.error("No Refresh Token Available", 401);
+            }
             const response = await fetch(`${this.apiUrl}/api/v1/refresh`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ refreshToken: this.refreshToken }),
+                body: JSON.stringify({ refreshToken: this.get_refresh_token() }),
             });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`HTTP ${response.status}: ${errorData.message}`);
-            }
             const data = await response.json();
-            this.accessToken = data.data.accessToken;
-            this.refreshToken = data.data.refreshToken;
-            console.log("Access token refreshed.");
-            return true;
+            if (!response.ok) {
+                return DocApiResponse.error(data.message || "Token Refresh Failed", response.status);
+            }
+            this.set_access_token(data.data.accessToken);
+            this.set_access_token(data.data.refreshToken);
+            return DocApiResponse.ok(data.data, data.message || 'Token Refreshed', response.status);
         }
         catch (error) {
-            console.error("Token refresh error:", error.message);
-            throw error;
+            return DocApiResponse.error(error.message || '[Unknown Server Error]', 500);
         }
     }
     async fetchWithRetry(url, options, retry = true) {
         try {
             const response = await fetch(url, options);
+            const data = await response.json();
             if (response.ok) {
-                return await response.json();
+                return DocApiResponse.ok(data.data, data.message || 'Success', response.status);
             }
-            else if (response.status === 401 && retry && this.refreshToken) {
-                // console.warn("Access token expired, attempting to refresh...");
-                await this.refreshAccessToken();
+            if (this.apiKey) {
+                return DocApiResponse.error(data.message || "Not retrying request with APIKEY set", response.status);
+            }
+            if (response.status === 401 && retry && this.get_refresh_token()) {
+                const res = await this.refreshAccessToken();
+                if (!res.success) {
+                    return DocApiResponse.error(res.message, res.code);
+                }
                 options.headers = {
                     ...(options.headers || {}),
-                    Authorization: `Bearer ${this.accessToken}`,
+                    Authorization: `Bearer ${this.get_access_token()}`,
                 };
                 const retryResponse = await fetch(url, options);
+                const retryData = await retryResponse.json();
                 if (retryResponse.ok) {
-                    return await retryResponse.json();
+                    return DocApiResponse.ok(retryData.data, retryData.message || 'Success', retryResponse.status);
                 }
-                const retryErrorData = await retryResponse.json();
-                throw new Error(`HTTP ${retryResponse.status}: ${retryErrorData.message}`);
+                return DocApiResponse.error(retryData.message || '[Retried Request Failes]', retryResponse.status);
             }
-            const errorData = await response.json();
-            // console.log(JSON.stringify(errorData, undefined, 2))
-            throw new Error(`HTTP ${response.status}: ${errorData.message}`);
+            return DocApiResponse.error(data.message || '[Unknown Request Fail]', response.status);
         }
         catch (error) {
-            console.error("Request failed:", error.message);
-            throw error;
+            return DocApiResponse.error(error.message || '[Unknown Server Error]', 500);
         }
     }
     async request(method, command, body) {
         const url = `${this.apiUrl}${command}`;
+        const token = this.apiKey || this.get_access_token() || null;
         const options = {
             method,
             headers: {
                 "Content-Type": "application/json",
-                ...(this.accessToken ? { Authorization: `Bearer ${this.accessToken}` } : {}),
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
-            body: body ? JSON.stringify(body) : undefined,
+            body: body ? JSON.stringify(body) : null,
         };
-        // console.log(JSON.stringify(options, undefined, 2))
         return this.fetchWithRetry(url, options);
     }
-    // Shortcut methods for common HTTP methods
     async get(command) {
         return this.request("GET", command);
     }
