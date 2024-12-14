@@ -21,7 +21,9 @@ declare class DocClient {
     private aToken;
     private rToken;
     private apiUrl;
+    debug: boolean;
     constructor(apiUrl: string, apiKey?: string | null);
+    set_debug(debug: boolean): void;
     get_access_token(): string | null;
     set_access_token(access: string | null): void;
     get_refresh_token(): string | null;

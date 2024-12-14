@@ -36,8 +36,12 @@ class DocClient {
         this.apiKey = null;
         this.aToken = null;
         this.rToken = null;
+        this.debug = false;
         this.apiUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
         this.apiKey = apiKey;
+    }
+    set_debug(debug) {
+        this.debug = debug;
     }
     // Overridable class methods for token storage
     get_access_token() {
@@ -62,8 +66,15 @@ class DocClient {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ login: username, password, domain, fingerprint }),
+                credentials: 'include',
             });
             const data = await response.json();
+            if (this.debug) {
+                console.log('Response Headers:');
+                response.headers.forEach((value, name) => {
+                    console.log(`${name}: ${value}`);
+                });
+            }
             if (!response.ok) {
                 return DocApiResponse.error(data.message || "Login Failed", response.status);
             }

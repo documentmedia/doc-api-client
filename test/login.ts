@@ -8,6 +8,7 @@ const PASS = "vemmelig!32";
 
 (async () => {
     const client = new DocClient(API_BASE_URL);
+    client.set_debug(true);
 
     try {
         console.log("Logging in...");
