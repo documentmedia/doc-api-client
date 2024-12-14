@@ -41,11 +41,15 @@ class DocClient {
         this.aToken = null;
         this.rToken = null;
         this.debug = false;
+        this.tokens = true;
         this.apiUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
         this.apiKey = apiKey;
     }
     set_debug(debug) {
         this.debug = debug;
+    }
+    disable_tokens(token) {
+        this.tokens = !token;
     }
     // Overridable class methods for token storage
     get_access_token() {
@@ -99,6 +103,7 @@ class DocClient {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ refreshToken: this.get_refresh_token() }),
+                credentials: 'include',
             });
             const data = await response.json();
             if (!response.ok) {
@@ -127,10 +132,12 @@ class DocClient {
                 if (!res.success) {
                     return DocApiResponse.error(res.message, res.code);
                 }
-                options.headers = {
-                    ...(options.headers || {}),
-                    Authorization: `Bearer ${this.get_access_token()}`,
-                };
+                if (this.tokens) {
+                    options.headers = {
+                        ...(options.headers || {}),
+                        Authorization: `Bearer ${this.get_access_token()}`,
+                    };
+                }
                 const retryResponse = await fetch(url, options);
                 const retryData = await retryResponse.json();
                 if (retryResponse.ok) {
@@ -150,11 +157,17 @@ class DocClient {
         const options = {
             method,
             headers: {
-                "Content-Type": "application/json",
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                "Content-Type": "application/json"
             },
+            credentials: 'include',
             body: body ? JSON.stringify(body) : null,
         };
+        if (this.tokens) {
+            options.headers = {
+                ...(options.headers || {}),
+                Authorization: `Bearer ${this.get_access_token()}`,
+            };
+        }
         return this.fetchWithRetry(url, options);
     }
     async get(command) {
