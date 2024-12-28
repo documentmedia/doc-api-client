@@ -77,6 +77,9 @@ class DocClient {
     set_apikey(apikey: string | null) {
         this.apiKey = apikey;
     }
+    get_apikey(): string | null {
+        return this.apiKey;
+    }
 
     // Not overridable
 
@@ -178,7 +181,12 @@ class DocClient {
             credentials: 'include',
             body: body ? JSON.stringify(body) : null,
         };
-        if (this.tokens) {
+        if (this.apiKey) {
+            options.headers = {
+                ...(options.headers || {}),
+                Authorization: `Bearer ${this.apiKey}`,
+            };
+        } else if (this.tokens) {
             options.headers = {
                 ...(options.headers || {}),
                 Authorization: `Bearer ${this.get_access_token()}`,
