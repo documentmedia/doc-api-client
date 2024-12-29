@@ -67,6 +67,9 @@ class DocClient {
     set_apikey(apikey) {
         this.apiKey = apikey;
     }
+    get_apikey() {
+        return this.apiKey;
+    }
     // Not overridable
     async login(username, password, domain = "", fingerprint = "") {
         try {
@@ -162,7 +165,13 @@ class DocClient {
             credentials: 'include',
             body: body ? JSON.stringify(body) : null,
         };
-        if (this.tokens) {
+        if (this.apiKey) {
+            options.headers = {
+                ...(options.headers || {}),
+                Authorization: `Bearer ${this.apiKey}`,
+            };
+        }
+        else if (this.tokens) {
             options.headers = {
                 ...(options.headers || {}),
                 Authorization: `Bearer ${this.get_access_token()}`,

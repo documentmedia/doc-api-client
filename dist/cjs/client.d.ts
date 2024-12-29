@@ -31,6 +31,7 @@ declare class DocClient {
     get_refresh_token(): string | null;
     set_refresh_token(refresh: string | null): void;
     set_apikey(apikey: string | null): void;
+    get_apikey(): string | null;
     login<T>(username: string, password: string, domain?: string, fingerprint?: string): Promise<DocApiResponse<T>>;
     private refreshAccessToken;
     private fetchWithRetry;
