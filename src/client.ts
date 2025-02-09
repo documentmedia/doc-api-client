@@ -10,6 +10,7 @@ export class DocApiResponse<T = any> implements _response<T> {
     code: number = 500;
     message: string = "[No Message]";
     data: T | null = null;
+    errors: Record<string,string> = {};
 
     constructor(success: boolean, code: number, message: any, data: T | null) {
         this.success = success;
@@ -22,6 +23,10 @@ export class DocApiResponse<T = any> implements _response<T> {
             this.message = "[Unknown error type]";
         }
         this.data = data;
+    }
+    
+    addError(name: string, value: string) {
+        this.errors[name] = value;
     }
 
     static ok<T>(data: T, message: any = "Success", code: number = 200): DocApiResponse<T> {

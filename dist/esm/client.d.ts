@@ -9,7 +9,9 @@ export declare class DocApiResponse<T = any> implements _response<T> {
     code: number;
     message: string;
     data: T | null;
+    errors: Record<string, string>;
     constructor(success: boolean, code: number, message: any, data: T | null);
+    addError(name: string, value: string): void;
     static ok<T>(data: T, message?: any, code?: number): DocApiResponse<T>;
     static error<T>(message: any, code?: number): DocApiResponse<T>;
     isSuccess(): this is DocApiResponse<T> & {

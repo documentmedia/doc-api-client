@@ -8,6 +8,7 @@ class DocApiResponse {
         this.code = 500;
         this.message = "[No Message]";
         this.data = null;
+        this.errors = {};
         this.success = success;
         this.code = code;
         if (typeof message === "string") {
@@ -20,6 +21,9 @@ class DocApiResponse {
             this.message = "[Unknown error type]";
         }
         this.data = data;
+    }
+    addError(name, value) {
+        this.errors[name] = value;
     }
     static ok(data, message = "Success", code = 200) {
         if (!data) {
