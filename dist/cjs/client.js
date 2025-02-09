@@ -171,7 +171,7 @@ class DocClient {
                         code: retryResponse.status
                     });
                 }
-                return DocApiResponse.error(retryData.message || '[Retried Request Failes]', { code: retryResponse.status });
+                return DocApiResponse.error(retryData.message || '[Retried Request Failes]', { errors: retryData.errors, code: retryResponse.status });
             }
             return DocApiResponse.error(data.message || '[Unknown Request Fail]', {
                 code: response.status
