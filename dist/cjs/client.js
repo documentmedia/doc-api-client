@@ -102,7 +102,10 @@ class DocClient {
                 });
             }
             if (!response.ok) {
-                return DocApiResponse.error("Login Failed", { code: response.status });
+                return DocApiResponse.error("Login Failed", {
+                    code: response.status,
+                    ...data
+                });
             }
             this.set_access_token(data.data.accessToken);
             this.set_refresh_token(data.data.refreshToken);
