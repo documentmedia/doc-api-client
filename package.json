@@ -1,6 +1,6 @@
 {
   "name": "doc-api-client",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "Client library for doc-api",
   "main": "dist/cjs/client.js",
   "module": "dist/esm/client.mjs",

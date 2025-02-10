@@ -111,6 +111,35 @@ class DocClient {
             return DocApiResponse.error(error.message || "[Internal Server Error]");
         }
     }
+    async logout() {
+        try {
+            const response = await fetch(`${this.apiUrl}/api/v1/logout`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({}),
+                credentials: 'include',
+            });
+            const data = await response.json();
+            if (this.debug) {
+                console.log('Response Headers:');
+                response.headers.forEach((value, name) => {
+                    console.log(`${name}: ${value}`);
+                });
+            }
+            if (!response.ok) {
+                return DocApiResponse.error("Logout Failed", {
+                    code: response.status,
+                    ...data
+                });
+            }
+            this.set_access_token(null);
+            this.set_refresh_token(null);
+            return DocApiResponse.ok(data.data, data);
+        }
+        catch (error) {
+            return DocApiResponse.error(error.message || "[Internal Server Error]");
+        }
+    }
     async refreshAccessToken() {
         try {
             if (!this.get_refresh_token()) {
