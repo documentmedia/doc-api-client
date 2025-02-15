@@ -3,15 +3,19 @@ interface _response<T = any> {
     code: number;
     message: string;
     data: T | null;
+    errors: Record<string, string>;
 }
 export declare class DocApiResponse<T = any> implements _response<T> {
     success: boolean;
     code: number;
     message: string;
     data: T | null;
-    constructor(success: boolean, code: number, message: any, data: T | null);
-    static ok<T>(data: T, message?: any, code?: number): DocApiResponse<T>;
-    static error<T>(message: any, code?: number): DocApiResponse<T>;
+    errors: Record<string, string>;
+    private parseMessage;
+    constructor(response?: Partial<_response<T>>);
+    static ok<T>(data: T, overrides?: Partial<_response<T>>): DocApiResponse<T>;
+    static error<T>(message: string, overrides?: Partial<_response<T>>): DocApiResponse<T>;
+    addError(name: string, value: string): void;
     isSuccess(): this is DocApiResponse<T> & {
         data: T;
     };

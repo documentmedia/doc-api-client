@@ -1,6 +1,6 @@
 import DocClient from '../src/client';
 
-const API_BASE_URL = `https://stage.document.no:3892`;
+const API_BASE_URL = `https://stage.document.no:3790`;
 const FINGERPRINT = "ff78";
 const DOMAIN = "somewhere";
 const USER = "dummy@test.com";
