@@ -93,7 +93,7 @@ class DocClient {
             });
             const data = await response.json();
             if (this.debug) {
-                console.log('Response Headers:');
+                console.log('Login Response Headers:');
                 response.headers.forEach((value, name) => {
                     console.log(`${name}: ${value}`);
                 });
@@ -104,6 +104,32 @@ class DocClient {
             this.set_access_token(data.data.accessToken);
             this.set_refresh_token(data.data.refreshToken);
             return DocApiResponse.ok(data.data, data.message || 'Login Successfull', response.status);
+        } catch (error: any) {
+            return DocApiResponse.error(error.message || "[Internal Server Error]", 500);
+        }
+    }
+
+    async logout<T>(token: string = ""): Promise<DocApiResponse<T>> {
+        try {
+            const response = await fetch(`${this.apiUrl}/api/v1/post`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: token ? JSON.stringify({ token }) : "{}",
+                credentials: 'include',
+            });
+            const data = await response.json();
+            if (this.debug) {
+                console.log('Logout Response Headers:');
+                response.headers.forEach((value, name) => {
+                    console.log(`${name}: ${value}`);
+                });
+            }
+            if (!response.ok) {
+                return DocApiResponse.error(data.message || "Logout Failed", response.status);
+            }
+            this.set_access_token(null);
+            this.set_refresh_token(null);
+            return DocApiResponse.ok(data.data, data.message || 'Logout Successfull', response.status);
         } catch (error: any) {
             return DocApiResponse.error(error.message || "[Internal Server Error]", 500);
         }
