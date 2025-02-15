@@ -33,6 +33,7 @@ declare class DocClient {
     set_apikey(apikey: string | null): void;
     get_apikey(): string | null;
     login<T>(username: string, password: string, domain?: string, fingerprint?: string): Promise<DocApiResponse<T>>;
+    logout<T>(token?: string): Promise<DocApiResponse<T>>;
     private refreshAccessToken;
     private fetchWithRetry;
     request<T>(method: "GET" | "POST" | "PUT" | "DELETE", command: string, body?: any): Promise<DocApiResponse<T>>;
