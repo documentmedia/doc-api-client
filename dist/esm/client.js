@@ -113,7 +113,7 @@ class DocClient {
     }
     async logout(token = "") {
         try {
-            const response = await fetch(`${this.apiUrl}/api/v1/post`, {
+            const response = await fetch(`${this.apiUrl}/api/v1/logout`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: token ? JSON.stringify({ token }) : "{}",
