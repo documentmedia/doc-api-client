@@ -229,6 +229,9 @@ class DocClient {
                 Authorization: `Bearer ${this.get_access_token()}`,
             };
         }
+        if (this.debug) {
+            console.log(`Doing request: ${url} - ${JSON.stringify(options, undefined, 2)}`);
+        }
         return this.fetchWithRetry(url, options);
     }
     async get(command) {
