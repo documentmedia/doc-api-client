@@ -27,7 +27,6 @@ or
     const client = new DocClient(API_BASE_URL);
     const client = new DocClient(API_BASE_URL, apikey);
 
-
 ### Public Methods
 
 #### `login(username: string, password: string, domain: string, fingerprint: string): Promise<{ accessToken: string; refreshToken: string }>`
@@ -63,6 +62,7 @@ Performs a `DELETE` request to the specified API endpoint. Optionally, you can i
 ## Authentication Management
 
 The `DocClient` class handles token-based authentication:
+
 - Automatically attaches the `Authorization` header with the Bearer token for authenticated requests.
 - Refreshes the access token when it expires using the stored refresh token.
 
