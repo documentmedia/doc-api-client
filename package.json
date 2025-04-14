@@ -1,46 +1,47 @@
 {
-  "name": "doc-api-client",
-  "version": "1.0.18",
-  "description": "Client library for doc-api",
-  "main": "dist/cjs/client.js",
-  "module": "dist/esm/client.mjs",
-  "types": "dist/cjs/client.d.ts",
-  "exports": {
-    "require": "./dist/cjs/client.js",
-    "import": "./dist/esm/client.js"
-  },
-  "scripts": {
-    "build:cjs": "tsc --project tsconfig/tsconfig.cjs.json",
-    "build:esm": "tsc --project tsconfig/tsconfig.esm.json",
-    "build": "npm run build:cjs && npm run build:esm",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublishOnly": "npm run build",
-    "lint": "eslint --ext .js,.ts,.vue ./",
-    "lintfix": "eslint --fix --ext .js,.ts,.vue ./",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,vue,json,css,scss,md}\""
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/documentmedia/doc-api-client.git"
-  },
-  "author": "BEJ",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/documentmedia/doc-api-client/issues"
-  },
-  "homepage": "https://github.com/documentmedia/doc-api-client#readme",
-  "devDependencies": {
-    "typescript": "^5.6.3",
-    "@typescript-eslint/eslint-plugin": "^8.29.0",
-    "@typescript-eslint/parser": "^8.29.0",
-    "eslint": "^8.57.1",
-    "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-vue": "^10.0.0",
-    "prettier": "^3.5.3"
-  },
-  "files": [
-    "dist/",
-    "package.json"
-  ]
+	"name": "doc-api-client",
+	"version": "1.0.19",
+	"description": "Client library for doc-api",
+	"main": "dist/cjs/client.js",
+	"module": "dist/esm/client.mjs",
+	"types": "dist/cjs/client.d.ts",
+	"exports": {
+		"require": "./dist/cjs/client.js",
+		"import": "./dist/esm/client.js"
+	},
+	"scripts": {
+		"build:cjs": "tsc --project tsconfig/tsconfig.cjs.json",
+		"build:esm": "tsc --project tsconfig/tsconfig.esm.json",
+		"build": "npm run build:cjs && npm run build:esm",
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"prepublishOnly": "npm run build",
+		"lint": "eslint --ext .js,.ts,.vue ./",
+		"lintfix": "eslint --fix --ext .js,.ts,.vue ./",
+		"format": "prettier --write \"**/*.{js,jsx,ts,tsx,vue,json,css,scss,md}\"",
+		"cleanbuild": "rm -rf ./dist/ && npm run lintfix && npm run format && npm run build"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/documentmedia/doc-api-client.git"
+	},
+	"author": "BEJ",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/documentmedia/doc-api-client/issues"
+	},
+	"homepage": "https://github.com/documentmedia/doc-api-client#readme",
+	"devDependencies": {
+		"typescript": "^5.6.3",
+		"@typescript-eslint/eslint-plugin": "^8.29.0",
+		"@typescript-eslint/parser": "^8.29.0",
+		"eslint": "^8.57.1",
+		"eslint-config-standard": "^17.1.0",
+		"eslint-plugin-import": "^2.31.0",
+		"eslint-plugin-vue": "^10.0.0",
+		"prettier": "^3.5.3"
+	},
+	"files": [
+		"dist/",
+		"package.json"
+	]
 }
