@@ -1,20 +1,20 @@
 interface _response<T = any> {
     success: boolean;
     code: number;
-    message: string;
+    error: string;
     data: T | null;
     errors: Record<string, string>;
 }
 export declare class DocApiResponse<T = any> implements _response<T> {
     success: boolean;
     code: number;
-    message: string;
+    error: string;
     data: T | null;
     errors: Record<string, string>;
     private parseMessage;
     constructor(response?: Partial<_response<T>>);
     static ok<T>(data: T, overrides?: Partial<_response<T>>): DocApiResponse<T>;
-    static error<T>(message: string, overrides?: Partial<_response<T>>): DocApiResponse<T>;
+    static error<T>(error: string, overrides?: Partial<_response<T>>): DocApiResponse<T>;
     addError(name: string, value: string): void;
     isSuccess(): this is DocApiResponse<T> & {
         data: T;
@@ -37,10 +37,10 @@ declare class DocClient {
     set_apikey(apikey: string | null): void;
     get_apikey(): string | null;
     login<T>(username: string, password: string, domain?: string, fingerprint?: string): Promise<DocApiResponse<T>>;
-    logout<T>(): Promise<DocApiResponse<T>>;
+    logout<T>(token?: string): Promise<DocApiResponse<T>>;
     private refreshAccessToken;
     private fetchWithRetry;
-    request<T>(method: "GET" | "POST" | "PUT" | "DELETE", command: string, body?: any): Promise<DocApiResponse<T>>;
+    request<T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', command: string, body?: any): Promise<DocApiResponse<T>>;
     get<T>(command: string): Promise<DocApiResponse<T>>;
     post<T>(command: string, body: any): Promise<DocApiResponse<T>>;
     put<T>(command: string, body: any): Promise<DocApiResponse<T>>;

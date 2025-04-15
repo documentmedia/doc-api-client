@@ -1,23 +1,22 @@
-;
 export class DocApiResponse {
-    parseMessage(message) {
-        if (typeof message === "string") {
-            return message;
+    parseMessage(error) {
+        if (typeof error === 'string') {
+            return error;
         }
-        if (message instanceof Error) {
-            return message.message || "[No error message]";
+        if (error instanceof Error) {
+            return error.message || '[No error message]';
         }
-        return "[Unknown error type]";
+        return '[Unknown error type]';
     }
     constructor(response = {}) {
         this.success = false;
         this.code = 500;
-        this.message = "[No Message]";
+        this.error = '[No Message]';
         this.data = null;
         this.errors = {};
         this.success = response.success ?? false;
         this.code = response.code ?? 500;
-        this.message = this.parseMessage(response.message);
+        this.error = this.parseMessage(response.error);
         this.data = response.data ?? null;
         this.errors = response.errors ?? {};
     }
@@ -25,16 +24,16 @@ export class DocApiResponse {
         return new DocApiResponse({
             success: true,
             code: 200,
-            message: "Success",
+            error: 'Success',
             data,
             ...overrides,
         });
     }
-    static error(message, overrides = {}) {
+    static error(error, overrides = {}) {
         return new DocApiResponse({
             success: false,
             code: 500,
-            message,
+            error,
             data: null,
             ...overrides,
         });
@@ -82,25 +81,25 @@ class DocClient {
         return this.apiKey;
     }
     // Not overridable
-    async login(username, password, domain = "", fingerprint = "") {
+    async login(username, password, domain = '', fingerprint = '') {
         try {
             const response = await fetch(`${this.apiUrl}/api/v1/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ login: username, password, domain, fingerprint }),
                 credentials: 'include',
             });
             const data = await response.json();
             if (this.debug) {
-                console.log('Response Headers:');
+                console.log('Login Response Headers:');
                 response.headers.forEach((value, name) => {
                     console.log(`${name}: ${value}`);
                 });
             }
             if (!response.ok) {
-                return DocApiResponse.error("Login Failed", {
+                return DocApiResponse.error('Login Failed', {
                     code: response.status,
-                    ...data
+                    ...data,
                 });
             }
             this.set_access_token(data.data.accessToken);
@@ -108,106 +107,131 @@ class DocClient {
             return DocApiResponse.ok(data.data, data);
         }
         catch (error) {
-            return DocApiResponse.error(error.message || "[Internal Server Error]");
+            return DocApiResponse.error(error.error || '[Internal Server Error]');
         }
     }
-    async logout() {
+    async logout(token = '') {
         try {
             const response = await fetch(`${this.apiUrl}/api/v1/logout`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({}),
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: token ? JSON.stringify({ token }) : '{}',
                 credentials: 'include',
             });
             const data = await response.json();
             if (this.debug) {
-                console.log('Response Headers:');
+                console.log('Logout Response Headers:');
                 response.headers.forEach((value, name) => {
                     console.log(`${name}: ${value}`);
                 });
             }
             if (!response.ok) {
-                return DocApiResponse.error("Logout Failed", {
-                    code: response.status,
-                    ...data
-                });
+                return DocApiResponse.error(data.error || 'Logout Failed', { code: response.status });
             }
             this.set_access_token(null);
             this.set_refresh_token(null);
-            return DocApiResponse.ok(data.data, data);
+            return DocApiResponse.ok(data.data, data.error || data.message || 'Logout Successfull');
         }
         catch (error) {
-            return DocApiResponse.error(error.message || "[Internal Server Error]");
+            return DocApiResponse.error(error.error || error.message || '[Internal Server Error]');
         }
     }
     async refreshAccessToken() {
         try {
             if (!this.get_refresh_token()) {
-                return DocApiResponse.error("No Refresh Token Available", { code: 401 });
+                return DocApiResponse.error('No Refresh Token Available', { code: 401 });
             }
             const response = await fetch(`${this.apiUrl}/api/v1/refresh`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ refreshToken: this.get_refresh_token() }),
                 credentials: 'include',
             });
             const data = await response.json();
             if (!response.ok) {
-                return DocApiResponse.error(data.message || "Token Refresh Failed", {
-                    code: response.status
+                return DocApiResponse.error(data.error || data.message || 'Token Refresh Failed', {
+                    code: response.status,
                 });
             }
             this.set_access_token(data.data.accessToken);
             this.set_access_token(data.data.refreshToken);
-            return DocApiResponse.ok(data.data, { message: data.message || 'Token Refreshed', code: response.status });
-        }
-        catch (error) {
-            return DocApiResponse.error(error.message || '[Unknown Server Error]');
-        }
-    }
-    async fetchWithRetry(url, options, retry = true) {
-        try {
-            const response = await fetch(url, options);
-            const data = await response.json();
-            if (response.ok) {
-                return DocApiResponse.ok(data.data, {
-                    message: data.message || 'Success',
-                    code: response.status
-                });
-            }
-            if (this.apiKey) {
-                return DocApiResponse.error(data.message || "Not retrying request with APIKEY set", {
-                    code: response.status
-                });
-            }
-            if (response.status === 401 && retry && this.get_refresh_token()) {
-                const res = await this.refreshAccessToken();
-                if (!res.success) {
-                    return DocApiResponse.error(res.message, { code: res.code });
-                }
-                if (this.tokens) {
-                    options.headers = {
-                        ...(options.headers || {}),
-                        Authorization: `Bearer ${this.get_access_token()}`,
-                    };
-                }
-                const retryResponse = await fetch(url, options);
-                const retryData = await retryResponse.json();
-                if (retryResponse.ok) {
-                    return DocApiResponse.ok(retryData.data, {
-                        message: retryData.message || 'Success',
-                        code: retryResponse.status
-                    });
-                }
-                return DocApiResponse.error(retryData.message || '[Retried Request Failes]', { errors: retryData.errors, code: retryResponse.status });
-            }
-            return DocApiResponse.error(data.message || '[Unknown Request Fail]', {
-                code: response.status
+            return DocApiResponse.ok(data.data, {
+                error: data.error || data.message || 'Token Refreshed',
+                code: response.status,
             });
         }
         catch (error) {
-            return DocApiResponse.error(error.message || '[Unknown Server Error]');
+            return DocApiResponse.error(error.error || error.message || '[Unknown Server Error]');
         }
+    }
+    async fetchWithRetry(url, options, retry = true) {
+        let response;
+        try {
+            response = await fetch(url, options);
+        }
+        catch (error) {
+            return DocApiResponse.error(error?.message || '[Unknown Server Error]');
+        }
+        let data;
+        try {
+            data = await response.json();
+        }
+        catch (error) {
+            return DocApiResponse.error(error?.message || '[Error parsing JSON]', { code: response.status });
+        }
+        if (response.ok) {
+            return DocApiResponse.ok(data, {
+                error: 'Success',
+                code: response.status,
+            });
+        }
+        if (this.apiKey) {
+            return DocApiResponse.error(data.error || data.message || 'Not retrying request with APIKEY set', {
+                code: response.status,
+            });
+        }
+        if (response.status === 401 && retry && this.get_refresh_token()) {
+            const res = await this.refreshAccessToken();
+            if (!res.success) {
+                return DocApiResponse.error(res.error, { code: res.code });
+            }
+            if (this.tokens) {
+                options.headers = {
+                    ...(options.headers || {}),
+                    Authorization: `Bearer ${this.get_access_token()}`,
+                };
+            }
+            let retry;
+            try {
+                retry = await fetch(url, options);
+            }
+            catch (error) {
+                return DocApiResponse.error(error?.message || '[Unknown server error]');
+            }
+            let rdata;
+            try {
+                rdata = await retry.json();
+            }
+            catch (error) {
+                return DocApiResponse.error(error?.message || '[Retried Request Failes]', {
+                    code: retry.status,
+                });
+            }
+            if (retry.ok) {
+                return DocApiResponse.ok(rdata, {
+                    error: 'Success',
+                    code: response.status,
+                });
+            }
+            else {
+                return DocApiResponse.error(rdata.error || rdata.message || '[Unknown Request Fail]', {
+                    code: response.status,
+                });
+            }
+        }
+        return DocApiResponse.error('[Unable to serve request]', {
+            code: response.status,
+        });
     }
     async request(method, command, body) {
         const url = `${this.apiUrl}${command}`;
@@ -215,7 +239,7 @@ class DocClient {
         const options = {
             method,
             headers: {
-                "Content-Type": "application/json"
+                'Content-Type': 'application/json',
             },
             credentials: 'include',
             body: body ? JSON.stringify(body) : null,
@@ -232,19 +256,22 @@ class DocClient {
                 Authorization: `Bearer ${this.get_access_token()}`,
             };
         }
+        if (this.debug) {
+            console.log(`Doing request: ${url} - ${JSON.stringify(options, undefined, 2)}`);
+        }
         return this.fetchWithRetry(url, options);
     }
     async get(command) {
-        return this.request("GET", command);
+        return this.request('GET', command);
     }
     async post(command, body) {
-        return this.request("POST", command, body);
+        return this.request('POST', command, body);
     }
     async put(command, body) {
-        return this.request("PUT", command, body);
+        return this.request('PUT', command, body);
     }
     async delete(command, body) {
-        return this.request("DELETE", command, body);
+        return this.request('DELETE', command, body);
     }
 }
 export default DocClient;
