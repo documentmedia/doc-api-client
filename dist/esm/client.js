@@ -1,39 +1,42 @@
-export class DocApiResponse {
-    parseMessage(error) {
-        if (typeof error === 'string') {
-            return error;
+export class apiResponse {
+    static parseMessage(e, def = '') {
+        if (typeof e === 'string') {
+            return e;
         }
-        if (error instanceof Error) {
-            return error.message || '[No error message]';
+        if (e instanceof Error) {
+            return e.message || '[No error message]';
         }
-        return '[Unknown error type]';
+        if (e && typeof e.message === 'string') {
+            return e.message;
+        }
+        return def || '[Unknown error type - neither string nor has .message]';
     }
     constructor(response = {}) {
         this.success = false;
         this.code = 500;
-        this.error = '[No Message]';
+        this.message = '[No Message]';
         this.data = null;
         this.errors = {};
         this.success = response.success ?? false;
         this.code = response.code ?? 500;
-        this.error = this.parseMessage(response.error);
+        this.message = apiResponse.parseMessage(response.message);
         this.data = response.data ?? null;
         this.errors = response.errors ?? {};
     }
     static ok(data, overrides = {}) {
-        return new DocApiResponse({
+        return new apiResponse({
             success: true,
             code: 200,
-            error: 'Success',
+            message: 'OK',
             data,
             ...overrides,
         });
     }
-    static error(error, overrides = {}) {
-        return new DocApiResponse({
+    static error(message, overrides = {}) {
+        return new apiResponse({
             success: false,
             code: 500,
-            error,
+            message,
             data: null,
             ...overrides,
         });
@@ -45,7 +48,7 @@ export class DocApiResponse {
         return this.success && this.data !== null;
     }
 }
-class DocClient {
+class apiClient {
     constructor(apiUrl, apiKey = null) {
         this.apiKey = null;
         this.aToken = null;
@@ -97,17 +100,17 @@ class DocClient {
                 });
             }
             if (!response.ok) {
-                return DocApiResponse.error('Login Failed', {
+                return apiResponse.error('Login Failed', {
                     code: response.status,
                     ...data,
                 });
             }
             this.set_access_token(data.data.accessToken);
             this.set_refresh_token(data.data.refreshToken);
-            return DocApiResponse.ok(data.data, data);
+            return apiResponse.ok(data.data, data);
         }
-        catch (error) {
-            return DocApiResponse.error(error.error || '[Internal Server Error]');
+        catch (e) {
+            return apiResponse.error(apiResponse.parseMessage(e, '[Unknown login response error]'));
         }
     }
     async logout(token = '') {
@@ -126,20 +129,20 @@ class DocClient {
                 });
             }
             if (!response.ok) {
-                return DocApiResponse.error(data.error || 'Logout Failed', { code: response.status });
+                return apiResponse.error(data.message || 'Logout Failed', { code: response.status });
             }
             this.set_access_token(null);
             this.set_refresh_token(null);
-            return DocApiResponse.ok(data.data, data.error || data.message || 'Logout Successfull');
+            return apiResponse.ok(data.data, data.message || 'Logout Successfull');
         }
-        catch (error) {
-            return DocApiResponse.error(error.error || error.message || '[Internal Server Error]');
+        catch (e) {
+            return apiResponse.error(apiResponse.parseMessage(e, '[Internal Server Error]'));
         }
     }
     async refreshAccessToken() {
         try {
             if (!this.get_refresh_token()) {
-                return DocApiResponse.error('No Refresh Token Available', { code: 401 });
+                return apiResponse.error('No Refresh Token Available', { code: 401 });
             }
             const response = await fetch(`${this.apiUrl}/api/v1/refresh`, {
                 method: 'POST',
@@ -149,19 +152,19 @@ class DocClient {
             });
             const data = await response.json();
             if (!response.ok) {
-                return DocApiResponse.error(data.error || data.message || 'Token Refresh Failed', {
+                return apiResponse.error(data.message || 'Token Refresh Failed', {
                     code: response.status,
                 });
             }
             this.set_access_token(data.data.accessToken);
             this.set_access_token(data.data.refreshToken);
-            return DocApiResponse.ok(data.data, {
-                error: data.error || data.message || 'Token Refreshed',
+            return apiResponse.ok(data.data, {
+                message: data.message || 'Token Refreshed',
                 code: response.status,
             });
         }
-        catch (error) {
-            return DocApiResponse.error(error.error || error.message || '[Unknown Server Error]');
+        catch (e) {
+            return apiResponse.error(apiResponse.parseMessage(e, '[Unknown Server Error]'));
         }
     }
     async fetchWithRetry(url, options, retry = true) {
@@ -170,30 +173,30 @@ class DocClient {
             response = await fetch(url, options);
         }
         catch (error) {
-            return DocApiResponse.error(error?.message || '[Unknown Server Error]');
+            return apiResponse.error(error?.message || '[Unknown Server Error]');
         }
         let data;
         try {
             data = await response.json();
         }
         catch (error) {
-            return DocApiResponse.error(error?.message || '[Error parsing JSON]', { code: response.status });
+            return apiResponse.error(error?.message || '[Error parsing JSON]', { code: response.status });
         }
         if (response.ok) {
-            return DocApiResponse.ok(data, {
-                error: 'Success',
+            return apiResponse.ok(data, {
+                message: 'OK',
                 code: response.status,
             });
         }
         if (this.apiKey) {
-            return DocApiResponse.error(data.error || data.message || 'Not retrying request with APIKEY set', {
+            return apiResponse.error(data.error || data.message || 'Not retrying request with APIKEY set', {
                 code: response.status,
             });
         }
         if (response.status === 401 && retry && this.get_refresh_token()) {
             const res = await this.refreshAccessToken();
             if (!res.success) {
-                return DocApiResponse.error(res.error, { code: res.code });
+                return apiResponse.error(res.message, { code: res.code });
             }
             if (this.tokens) {
                 options.headers = {
@@ -206,30 +209,30 @@ class DocClient {
                 retry = await fetch(url, options);
             }
             catch (error) {
-                return DocApiResponse.error(error?.message || '[Unknown server error]');
+                return apiResponse.error(error?.message || '[Unknown server error]');
             }
             let rdata;
             try {
                 rdata = await retry.json();
             }
             catch (error) {
-                return DocApiResponse.error(error?.message || '[Retried Request Failes]', {
+                return apiResponse.error(error?.message || '[Retried Request Failes]', {
                     code: retry.status,
                 });
             }
             if (retry.ok) {
-                return DocApiResponse.ok(rdata, {
-                    error: 'Success',
+                return apiResponse.ok(rdata, {
+                    message: 'OK',
                     code: response.status,
                 });
             }
             else {
-                return DocApiResponse.error(rdata.error || rdata.message || '[Unknown Request Fail]', {
+                return apiResponse.error(rdata.error || rdata.message || '[Unknown Request Fail]', {
                     code: response.status,
                 });
             }
         }
-        return DocApiResponse.error('[Unable to serve request]', {
+        return apiResponse.error('[Unable to serve request]', {
             code: response.status,
         });
     }
@@ -274,4 +277,4 @@ class DocClient {
         return this.request('DELETE', command, body);
     }
 }
-export default DocClient;
+export default apiClient;
