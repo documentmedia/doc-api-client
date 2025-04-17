@@ -6,6 +6,8 @@ interface _response<T = any> {
 	errors: Record<string, string>;
 }
 
+let _debug = false;
+
 export class apiResponse<T = any> implements _response<T> {
 	success: boolean = false;
 	code: number = 500;
@@ -35,13 +37,17 @@ export class apiResponse<T = any> implements _response<T> {
 	}
 
 	static ok<T>(data: T, overrides: Partial<_response<T>> = {}): apiResponse<T> {
-		return new apiResponse<T>({
+		const res = new apiResponse<T>({
 			success: true,
 			code: 200,
 			message: 'OK',
 			data,
 			...overrides,
 		});
+		if (_debug) {
+			console.log('RESPONSE WAS OK, RES:', JSON.stringify(res, undefined, 2));
+		}
+		return res;
 	}
 
 	static error<T>(message: string, overrides: Partial<_response<T>> = {}): apiResponse<T> {
@@ -77,7 +83,7 @@ class apiClient {
 	}
 
 	public set_debug(debug: boolean) {
-		this.debug = debug;
+		this.debug = _debug = debug;
 	}
 
 	public disable_tokens(token: boolean) {

@@ -1,3 +1,4 @@
+let _debug = false;
 export class apiResponse {
     static parseMessage(e, def = '') {
         if (typeof e === 'string') {
@@ -24,13 +25,17 @@ export class apiResponse {
         this.errors = response.errors ?? {};
     }
     static ok(data, overrides = {}) {
-        return new apiResponse({
+        const res = new apiResponse({
             success: true,
             code: 200,
             message: 'OK',
             data,
             ...overrides,
         });
+        if (_debug) {
+            console.log('RESPONSE WAS OK, RES:', JSON.stringify(res, undefined, 2));
+        }
+        return res;
     }
     static error(message, overrides = {}) {
         return new apiResponse({
@@ -59,7 +64,7 @@ class apiClient {
         this.apiKey = apiKey;
     }
     set_debug(debug) {
-        this.debug = debug;
+        this.debug = _debug = debug;
     }
     disable_tokens(token) {
         this.tokens = !token;
