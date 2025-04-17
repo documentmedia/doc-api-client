@@ -192,7 +192,7 @@ class apiClient {
             return apiResponse.error(error?.message || '[Error parsing JSON]', { code: response.status });
         }
         if (response.ok) {
-            return apiResponse.ok(data, {
+            return apiResponse.ok(data.data, {
                 message: 'OK',
                 code: response.status,
             });
@@ -230,7 +230,7 @@ class apiClient {
                 });
             }
             if (retry.ok) {
-                return apiResponse.ok(rdata, {
+                return apiResponse.ok(rdata.data, {
                     message: 'OK',
                     code: response.status,
                 });

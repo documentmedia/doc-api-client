@@ -222,7 +222,7 @@ class apiClient {
 		}
 
 		if (response.ok) {
-			return apiResponse.ok<T>(data, {
+			return apiResponse.ok<T>(data.data, {
 				message: 'OK',
 				code: response.status,
 			});
@@ -262,7 +262,7 @@ class apiClient {
 				});
 			}
 			if (retry.ok) {
-				return apiResponse.ok<T>(rdata, {
+				return apiResponse.ok<T>(rdata.data, {
 					message: 'OK',
 					code: response.status,
 				});
